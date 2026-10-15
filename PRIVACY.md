@@ -2,13 +2,13 @@
 
 _Last updated: 2026-10-14_
 
-**kitchen-display** is a self-hosted, open-source wall display. It shows a clock, a photo
+**Home-Display** is a self-hosted, open-source wall display. It shows a clock, a photo
 background and a Google Calendar agenda. This policy explains what the app does with your
 data when you connect a Google account.
 
 ## Who runs it
 
-kitchen-display is not a hosted service. Each person who installs it runs their own copy on
+Home-Display is not a hosted service. Each person who installs it runs their own copy on
 their own server. The data described below stays on that server and is controlled by the
 person who runs it (the "operator"). The authors of the software do not receive any of it.
 
@@ -55,7 +55,7 @@ including the Limited Use requirements.
 ## Your choices
 
 - **Revoke access at any time** at <https://myaccount.google.com/permissions>. Remove
-  kitchen-display from the list and the stored token stops working immediately.
+  Home-Display from the list and the stored token stops working immediately.
 - **Delete the data** by removing the account in the app, or by deleting the operator's
   `/data` folder.
 - **Ask the operator** (the person whose display you are connecting to) what they have

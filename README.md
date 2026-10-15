@@ -1,4 +1,4 @@
-# kitchen-display
+# Home-Display
 
 Self-hosted wall display: Google Calendar agenda (several accounts), clock and photo
 background, for a portrait kitchen screen or a browser homepage. Work in progress; see

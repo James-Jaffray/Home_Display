@@ -1,4 +1,4 @@
-# kitchen-display: rules for Claude Code
+# Home-Display: rules for Claude Code
 
 Read ROADMAP.md (plan, decisions) and docs/ARCHITECTURE.md (how the code is laid out).
 

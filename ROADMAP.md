@@ -1,9 +1,9 @@
-# kitchen-display: Project Brief and Roadmap
+# Home-Display: Project Brief and Roadmap
 
 Hand this file to Claude Code. Put it in the repo root as `ROADMAP.md`, and a short version
 of "Ground rules" as `CLAUDE.md` if you want it applied automatically every session.
 
-Working name: **kitchen-display** (rename freely before the first commit; the repo name,
+Working name: **Home-Display** (rename freely before the first commit; the repo name,
 image name and README all derive from it).
 
 > **Revision 2 (after James answered section 9).** Four answers changed the plan:
@@ -196,7 +196,7 @@ Don't promise the container on a 512 MB Pi Zero. Recommend it as a kiosk client 
 ## 5. Repo layout (target)
 
 ```
-kitchen-display/
+Home-Display/
   config/config.example.yaml     boot config (real config.yaml gitignored)
   server/src/index.js            entry: load settings + config, start Fastify
   server/src/settings.js         environment variables
@@ -462,7 +462,7 @@ ANSWER: plan for public repo
 **Consequence [rev2]:** MIT licence assumed (change if you disagree), no secrets or personal
 data ever committed (parents' names, `weezle.me` internals and the NAS IP stay out of the
 public docs and example config), README written for strangers. Repo name still the working
-name `kitchen-display`.
+name `Home-Display`.
 
 | 6 | What else is on the DAKboard screen today that you'd miss (weather, a to-do list)? | Slice 4 |
 |---|---|---|

@@ -43,7 +43,7 @@ app.log.info(
     photosDir: settings.photosDir,
     photosReadable: health.photosReadable,
   },
-  'config valid, kitchen-display ready',
+  'config valid, Home-Display ready',
 );
 
 // 4. Shut down cleanly when Docker or the OS asks us to.

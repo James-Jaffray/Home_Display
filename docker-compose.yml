@@ -1,7 +1,7 @@
 services:
-  kitchen-display:
+  home-display:
     # Replace OWNER with your GitHub user once the image is published.
-    image: ghcr.io/OWNER/kitchen-display:latest
+    image: ghcr.io/OWNER/home-display:latest
     # Or build locally instead:
     # build: .
     restart: unless-stopped

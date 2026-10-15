@@ -1,4 +1,4 @@
-# How kitchen-display fits together
+# How Home-Display fits together
 
 Read this first if you are new to the code. It is short on purpose.
 

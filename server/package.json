@@ -1,5 +1,5 @@
 {
-  "name": "kitchen-display-server",
+  "name": "home-display-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
