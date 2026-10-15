@@ -23,6 +23,7 @@ export function loadSettings(env = process.env) {
     configPath: resolve(env.CONFIG_PATH ?? resolve(projectRoot, 'config/config.yaml')),
     dataDir,
     photosDir: resolve(env.PHOTOS_DIR ?? `${dataDir}/photos`),
+    iconsDir: resolve(env.ICONS_DIR ?? `${dataDir}/icons`),
     webDist: resolve(env.WEB_DIST ?? resolve(serverDir, '../web/dist')),
     // Where browsers reach this app. Must match the redirect URI registered in Google.
     publicBaseUrl: (env.PUBLIC_BASE_URL ?? `http://localhost:${port}`).replace(/\/+$/, ''),

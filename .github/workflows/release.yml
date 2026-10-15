@@ -1,5 +1,7 @@
 name: Release image
 
+# Push a tag like v0.2.0 to build and publish a multi-arch image (amd64 for PCs and NAS
+# boxes, arm64 for Raspberry Pi 3/4/5) to GitHub Container Registry.
 on:
   push:
     tags: ["v*"]
@@ -9,7 +11,22 @@ permissions:
   packages: write
 
 jobs:
+  # Never publish an image that fails its own checks.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
   image:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,10 +37,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Work out the image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/home-display" >> "$GITHUB_ENV"
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ env.IMAGE }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}

@@ -18,6 +18,11 @@ export function createLiveConfig({ baseConfig, settingsStore }) {
   function merge(settings) {
     const merged = structuredClone(baseConfig);
 
+    // Displays made in the dashboard (config.yaml ones win if an id is ever in both).
+    for (const [displayId, display] of Object.entries(settings.displays)) {
+      if (!(displayId in merged.screens)) merged.screens[displayId] = structuredClone(display);
+    }
+
     for (const [screenId, override] of Object.entries(settings.screens)) {
       const screen = merged.screens[screenId];
       if (!screen) continue; // screen was removed from config.yaml: ignore its overrides

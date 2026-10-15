@@ -1,6 +1,6 @@
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-export const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+const SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 
 /** An auth problem. `code` is a short machine-readable reason; messages never contain tokens. */
 export class GoogleAuthError extends Error {
@@ -46,9 +46,11 @@ export function createGoogleOAuth({ clientId, clientSecret, redirectUri, fetchIm
         redirect_uri: redirectUri,
         response_type: 'code',
         scope: SCOPE,
-        // offline + consent make Google return a refresh token every time.
+        // offline + consent make Google return a refresh token every time; select_account
+        // always shows the account chooser, so connecting a second person's account does
+        // not silently reuse whoever is signed in to this browser.
         access_type: 'offline',
-        prompt: 'consent',
+        prompt: 'consent select_account',
         state,
       }).toString();
       return url.toString();

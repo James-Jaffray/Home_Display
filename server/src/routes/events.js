@@ -1,4 +1,5 @@
 import { buildAgenda, localDate, weekStartDate } from '../services/agenda.js';
+import { displayGuard } from './displayGuard.js';
 
 const MAX_DAYS = 14;
 const MAX_WEEKS = 6;
@@ -15,7 +16,7 @@ const MAX_WEEKS = 6;
  * @param {{services: ReturnType<import('../services/index.js').createServices>}} options
  */
 export default async function eventRoutes(app, { services }) {
-  app.get('/api/screens/:id/events', async (req, reply) => {
+  app.get('/api/screens/:id/events', { preHandler: displayGuard(services) }, async (req, reply) => {
     const screen = services.live.get().screens[req.params.id];
     if (!screen) return reply.code(404).send({ error: 'unknown screen' });
 

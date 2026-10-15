@@ -287,7 +287,9 @@ events with a visible "stale" hint; revoking the app's access shows "reconnect n
 crash; no token, calendar URL or event title in default logs or in any response other than
 `/events`.
 
-### Slice 3: Multiple screens and protection **[rev2]**
+### Slice 3: Multiple screens and protection **[rev2] (BUILT, see notes below)**
+
+**Built:** per-display access tokens (`?k=`, made in the dashboard); a display with no token is served only to the home network and refused when the request arrives through a tunnel or from a public address (Cloudflare reports the visitor address); "paste the address" Google sign-in for installs without a domain or https; compose recipes (home only, tunnel profile). Not verified: a real Cloudflare tunnel, and the parents' own Google sign-in.
 **Goal:** `kitchen` and `parents` from one install, safe to reach from outside the LAN.
 - `screens:` map in config, each with its own calendars, photos folder, timezone, title and
   layout; unknown screen id gives a clear 404 page. `/` redirects to `defaultScreen`.
@@ -304,7 +306,7 @@ the parents' Pi can load its screen through the tunnel and an anonymous request 
 ### Slice 4: Admin UI **[rev2, new] (BUILT, see notes below)**
 **Goal:** James can manage everything from a browser instead of editing YAML.
 
-**Built as asked (admin password chosen):** `/admin` is a separate page from the display. Single shared `ADMIN_PASSWORD` from `.env`, HttpOnly SameSite=Strict session cookie, lockout after 5 wrong tries, same-origin check on writes. It edits per screen: layout, weeks, week start, 12/24h, text size (0.7x to 1.6x), photo interval, which calendars show, and photos (resized to 1920px in the browser before upload, so no `sharp` dependency). It can add calendars from a connected Google account (shared ones too) and connect or reconnect accounts. Changes are saved to `/data/settings.json` and applied live. Still to do in this slice: edit timezone/title/photo folder, create/delete screens, drag-to-reorder, and a preview pane.
+**Built as asked (admin password chosen):** `/admin` is a separate page from the display. Single shared `ADMIN_PASSWORD` from `.env`, HttpOnly SameSite=Strict session cookie, lockout after 5 wrong tries, same-origin check on writes. It edits per screen: layout, weeks, week start, 12/24h, text size (0.7x to 1.6x), photo interval, which calendars show, and photos (resized to 1920px in the browser before upload, so no `sharp` dependency). It can add calendars from a connected Google account (shared ones too) and connect or reconnect accounts. Changes are saved to `/data/settings.json` and applied live. **Rotation option (added):** a per-screen `rotate` (0/90/180/270) turns the picture itself, so a TV or stick that cannot rotate its own output can still show the portrait layout. The display sizes in container units (`cqw`/`cqh`), not `vw`/`vh`, so use those in new display components. **Displays (added):** the dashboard has a display selector and *Add a display*; each display has its own title, timezone, layout, text size, rotation, calendars and photos. The wall display is served at `/display/<id>` (bare `/display` = default; old `/<id>` links redirect). The display page is view-only and public by design, so Slice 3 must put a per-display token and Cloudflare Access in front of it before it leaves the LAN. Still to do in this slice: edit timezone/title/photo folder, create/delete screens, drag-to-reorder, and a preview pane.
 - **Admin auth first.** Decision needed (Q9). Recommended: rely on Cloudflare Access for the
   `/admin` path **and** a single admin password from `.env` (hashed compare, rate limited)
   for installs without a tunnel. No user accounts.
@@ -322,7 +324,9 @@ photo, change the layout, and see the wall screen update on its own; unauthentic
 to any admin route or upload endpoint are refused; an oversize or non-image upload is
 rejected; deleting `/data/settings.json` falls back to the YAML seed.
 
-### Slice 5: Layouts, week view, browser-homepage mode
+### Slice 5: Layouts, week view, browser-homepage mode (BUILT)
+
+**Built:** `month-grid`, `portrait-week` (seven rows), `landscape-split` (clock and 3-day list beside the grid) and `portrait-agenda`, chosen per display in the dashboard; optional search box (Google or DuckDuckGo, off by default); open display pages reload themselves when `/api/health` lists different web files than the ones they loaded (each page checks once a minute), and keep showing the last data while the server restarts. Layouts live in `web/src/layouts/`. Not verified at true 1080x1920 / 1920x1080 on a TV; checked at 540x960 and 960x540 (same ratios).
 **Goal:** More than one look, and a good desktop experience.
 - Layout presets selectable per screen: `portrait-agenda`, `portrait-week`, `landscape-split`.
 - Week view (7-day grid) with the same events and colours.
@@ -334,7 +338,31 @@ rejected; deleting `/data/settings.json` falls back to the YAML seed.
 **Accept:** each layout renders correctly at 1080x1920 and 1920x1080; switching a screen's
 layout is a settings change only; the page recovers by itself after the server restarts.
 
-### Slice 6: Packaging for sharing
+### Link buttons and dashboard redesign (BUILT, between slices 5 and 6)
+
+**Link buttons:** up to six per display, round icon buttons, built-in icon set or an uploaded picture (stored in `/data/icons/<display>/`, squared to 128 px in the browser), placed in a row above/below or a column left/right of the calendar. Per display; duplicate addresses on one display are refused; http(s) only. The dashboard was reorganised into tabs with a live preview (an iframe of the real display page).
+
+### Kiosk vs interactive (BUILT)
+
+Per display `mode`: `kiosk` (default; the server sends no links and no search bar, nothing is clickable) or `interactive` (link buttons, searchbar, click a date for the full day in a dialog that covers the stage and works rotated). Saved links and search choices are kept while in kiosk mode. The dashboard shows them off and greyed out in kiosk mode.
+
+### Slice 6: Packaging for sharing (BUILT, image not yet published)
+
+**Built:** README rewritten for strangers (quick start, how to run it, dashboard guide,
+troubleshooting); `docs/google-setup.md` (every Google Cloud step, including the Branding
+and "publish to production" traps); `docs/configuration.md`; `docs/RELEASING.md`;
+`CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`; compose file using a named data volume
+(avoids the root-owned bind-mount permission trap) with an optional tunnel profile; CI that
+also builds the image, and a release workflow that verifies before publishing.
+
+**Verified without Docker:** the production dependency install and run layout (what the
+Dockerfile does) starts from the example config. **Not verified:** a real `docker build`,
+the multi-arch publish, and following the README on a clean machine; Docker could not run
+on the dev machine. No screenshot yet (one would show real calendar titles).
+
+**iCal provider: removed, not built.** The stub (config shape, "unsupported" status) was
+dead code, so it was deleted. Re-add it when someone needs a non-Google feed.
+
 **Goal:** A stranger can run it from the README in ten minutes.
 - Published GHCR image (multi-arch), `docker-compose.yml` that pulls it, `config.example.yaml`
   with comments, `.env.example`.

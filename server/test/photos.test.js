@@ -89,13 +89,16 @@ test('unknown screen is a 404', async () => {
 
 test('screen endpoint exposes only display fields', async () => {
   const body = (await app.inject('/api/screens/kitchen')).json();
-  assert.deepEqual(Object.keys(body).sort(), ['clock', 'fontScale', 'id', 'layout', 'photoInterval', 'timezone', 'title', 'weekStart', 'weeks']);
+  assert.deepEqual(Object.keys(body).sort(), ['clock', 'fontScale', 'id', 'layout', 'links', 'linksPosition', 'mode', 'photoInterval', 'rotate', 'search', 'searchPosition', 'timezone', 'title', 'weekStart', 'weeks']);
 });
 
 test('root redirects to the default screen', async () => {
   const res = await app.inject('/');
   assert.equal(res.statusCode, 302);
-  assert.equal(res.headers.location, '/kitchen');
+  assert.equal(res.headers.location, '/display/kitchen');
+  assert.equal((await app.inject('/display')).headers.location, '/display/kitchen');
+  // Old links keep working.
+  assert.equal((await app.inject('/kitchen')).headers.location, '/display/kitchen');
 });
 
 test('isSafePhotoName', () => {

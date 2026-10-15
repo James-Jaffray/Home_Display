@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api.js';
-import ScreenCard from './ScreenCard.jsx';
+import Accounts from './Accounts.jsx';
+import AddDisplay from './AddDisplay.jsx';
+import Header from './Header.jsx';
+import Preview from './Preview.jsx';
+import DisplaySettings from './DisplaySettings.jsx';
+import Tabs from './Tabs.jsx';
 
 const STATUS_LABEL = {
   ok: 'working',
@@ -9,16 +14,36 @@ const STATUS_LABEL = {
   error: 'error',
   'needs-reconnect': 'reconnect needed',
   'not-connected': 'not connected',
-  unsupported: 'not supported yet',
 };
 
+/** Remembering the last tab and display is a convenience only: it must never break the page. */
+function remembered(key, fallback) {
+  try {
+    return window.localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+function remember(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // private window or blocked storage: fine, it just will not be remembered
+  }
+}
+
 /**
- * Everything you can change: accounts at the top, then one card per screen.
+ * The dashboard: a header to pick the display, tabs for each part of it, and a live
+ * preview beside the settings.
+ *
  * @param {{onLoggedOut: () => void, onSessionLost: () => void}} props
  */
 export default function Dashboard({ onLoggedOut, onSessionLost }) {
   const [overview, setOverview] = useState(null);
   const [error, setError] = useState('');
+  const [selectedId, setSelectedId] = useState(() => remembered('hd-display', ''));
+  const [tab, setTab] = useState(() => remembered('hd-tab', 'look'));
+  const [adding, setAdding] = useState(false);
 
   // Used by the children after they change something: reload and wait for the result.
   const reload = useCallback(async () => {
@@ -55,57 +80,84 @@ export default function Dashboard({ onLoggedOut, onSessionLost }) {
     };
   }, [onSessionLost]);
 
-  if (!overview) return <p className="text-text-muted">{error || 'Loading…'}</p>;
+  if (!overview) {
+    return <p className="p-8 text-center text-text-muted">{error || 'Loading…'}</p>;
+  }
+
+  // The display being edited; falls back to the first if the remembered one is gone.
+  const selected = overview.screens.find((s) => s.id === selectedId) ?? overview.screens[0];
+  const chooseDisplay = (id) => {
+    setSelectedId(id);
+    remember('hd-display', id);
+  };
+  const chooseTab = (id) => {
+    setTab(id);
+    remember('hd-tab', id);
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Home-Display dashboard</h1>
-        <button className="btn" onClick={onLoggedOut}>
-          Log out
-        </button>
-      </header>
-      {error && <p className="text-danger">{error}</p>}
+    <>
+      <Header
+        screens={overview.screens}
+        selectedId={selected.id}
+        onSelect={chooseDisplay}
+        onAdd={() => setAdding((open) => !open)}
+        onLogout={onLoggedOut}
+      />
 
-      <section className="panel">
-        <h2 className="text-lg font-semibold">Google accounts</h2>
-        {!overview.googleConfigured && (
-          <p className="mt-2 text-warn">
-            GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set, so accounts cannot be connected.
-          </p>
-        )}
-        <ul className="mt-3 flex flex-col gap-2">
-          {overview.accounts.map((a) => (
-            <li key={a.account} className="flex items-center justify-between gap-3">
-              <span>
-                <strong>{a.account}</strong>{' '}
-                <span className={a.connected ? 'text-text-muted' : 'text-warn'}>
-                  {a.connected ? 'connected' : 'not connected'}
-                </span>
-              </span>
-              {overview.googleConfigured && (
-                <a className="btn" href={`/api/auth/google/start?account=${encodeURIComponent(a.account)}`}>
-                  {a.connected ? 'Reconnect' : 'Connect'}
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-sm text-text-muted">
-          Connecting opens Google’s own sign-in page. Your password is never shared with this app.
-        </p>
-      </section>
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <main className="min-w-0">
+          {error && <p className="mb-4 text-danger">{error}</p>}
 
-      {overview.screens.map((screen) => (
-        <ScreenCard
-          key={screen.id}
-          screen={screen}
-          calendars={overview.calendars}
-          accounts={overview.accounts}
-          statusLabel={STATUS_LABEL}
-          onChanged={reload}
-        />
-      ))}
-    </div>
+          {adding && (
+            <div className="mb-5">
+              <AddDisplay
+                screens={overview.screens}
+                defaultTimezone={selected.timezone}
+                onCancel={() => setAdding(false)}
+                onCreated={async (id) => {
+                  setAdding(false);
+                  await reload();
+                  chooseDisplay(id);
+                }}
+              />
+            </div>
+          )}
+
+          <Tabs current={tab} onChange={chooseTab} />
+
+          <div className="mt-5">
+            {tab === 'accounts' ? (
+              <Accounts
+                accounts={overview.accounts}
+                googleConfigured={overview.googleConfigured}
+                redirectUri={overview.redirectUri}
+                onChanged={reload}
+              />
+            ) : (
+              // key: switching display starts a fresh form, so edits never leak between displays
+              <DisplaySettings
+                key={selected.id}
+                section={tab}
+                screen={selected}
+                calendars={overview.calendars}
+                accounts={overview.accounts}
+                publicBaseUrl={overview.publicBaseUrl}
+                statusLabel={STATUS_LABEL}
+                onChanged={reload}
+                onDeleted={async () => {
+                  chooseDisplay('');
+                  await reload();
+                }}
+              />
+            )}
+          </div>
+        </main>
+
+        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <Preview key={selected.id} screen={selected} />
+        </aside>
+      </div>
+    </>
   );
 }

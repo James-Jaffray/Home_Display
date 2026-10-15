@@ -6,13 +6,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const LOOKBACK_DAYS = 7;
 
 /**
- * @typedef {'pending'|'ok'|'stale'|'error'|'needs-reconnect'|'not-connected'|'unsupported'} CalendarStatus
+ * @typedef {'pending'|'ok'|'stale'|'error'|'needs-reconnect'|'not-connected'} CalendarStatus
  *   ok              last fetch worked
  *   stale           last fetch failed, showing the last good data
  *   error           never fetched successfully
  *   needs-reconnect Google rejected the token (revoked or expired): sign in again
  *   not-connected   no token saved for this account yet
- *   unsupported     provider not built yet (iCal)
  */
 
 /**
@@ -56,8 +55,7 @@ export function createCalendarService({
   function entryFor(id) {
     let entry = cache.get(id);
     if (!entry) {
-      const unsupported = getConfig().calendars[id]?.provider !== 'google';
-      entry = { events: [], updatedAt: null, status: unsupported ? 'unsupported' : 'pending' };
+      entry = { events: [], updatedAt: null, status: 'pending' };
       cache.set(id, entry);
     }
     return entry;
@@ -87,7 +85,7 @@ export function createCalendarService({
   /** Fetch one calendar and update its cache entry. Never throws. */
   async function refreshCalendar(id) {
     const cal = getConfig().calendars[id];
-    if (!cal || cal.provider !== 'google') return;
+    if (!cal) return;
     const entry = entryFor(id);
     try {
       const timeMin = new Date(now() - LOOKBACK_DAYS * DAY_MS);
@@ -126,7 +124,7 @@ export function createCalendarService({
     refreshAccount(account) {
       accessTokens.delete(account);
       const ids = Object.entries(getConfig().calendars)
-        .filter(([, c]) => c.provider === 'google' && c.account === account)
+        .filter(([, c]) => c.account === account)
         .map(([id]) => id);
       return Promise.all(ids.map(refreshCalendar));
     },
@@ -137,6 +135,20 @@ export function createCalendarService({
      */
     listAccountCalendars(account) {
       return withAccessToken(account, (accessToken) => listCalendars({ accessToken, fetchImpl }));
+    },
+
+    /**
+     * The Google address behind an access token (its primary calendar's id), or null.
+     * Used right after sign-in to record who an account name belongs to.
+     * @param {string} accessToken
+     */
+    async primaryAddress(accessToken) {
+      try {
+        const list = await listCalendars({ accessToken, fetchImpl });
+        return list.find((c) => c.primary)?.calendarId ?? null;
+      } catch {
+        return null; // not essential
+      }
     },
 
     start() {

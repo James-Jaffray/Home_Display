@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
+import { UiIcon } from '../lib/icons.jsx';
 import { api } from './api.js';
 import Login from './Login.jsx';
 import Dashboard from './Dashboard.jsx';
+import './admin.css';
 
 /**
  * The /admin page: checks whether you are logged in, then shows the login form or the
@@ -28,41 +30,49 @@ export default function AdminApp() {
     };
   }, [checks]);
 
-  if (!session) return <Shell />;
+  if (!session) return <div className="admin" />;
 
   if (!session.enabled) {
     return (
-      <Shell>
-        <div className="panel">
-          <h1 className="text-2xl font-semibold">Dashboard is turned off</h1>
-          <p className="mt-2 text-text-muted">
-            Set <code>ADMIN_PASSWORD</code> in your <code>.env</code> file and restart the server to enable it.
+      <Centered>
+        <div className="panel text-center">
+          <span className="brand-mark mx-auto">
+            <UiIcon name="access" className="size-5" />
+          </span>
+          <h1 className="mt-4 text-xl font-semibold">The dashboard is turned off</h1>
+          <p className="card-lede">
+            Set <code>ADMIN_PASSWORD</code> in your <code>.env</code> file and restart the server to turn it on.
           </p>
         </div>
-      </Shell>
+      </Centered>
     );
   }
 
   if (!session.authenticated) {
     return (
-      <Shell>
+      <Centered>
         <Login onLoggedIn={recheck} unreachable={session.unreachable} />
-      </Shell>
+      </Centered>
     );
   }
 
   return (
-    <Shell>
+    <div className="admin">
       <Dashboard
         onLoggedOut={() => {
           api('/api/admin/logout', { method: 'POST', body: {} }).finally(recheck);
         }}
         onSessionLost={recheck}
       />
-    </Shell>
+    </div>
   );
 }
 
-function Shell({ children }) {
-  return <div className="mx-auto min-h-full max-w-3xl px-4 py-6">{children}</div>;
+/** A page with one card in the middle (login, "turned off"). */
+function Centered({ children }) {
+  return (
+    <div className="admin flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-sm">{children}</div>
+    </div>
+  );
 }

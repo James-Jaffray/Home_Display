@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { withToken } from '../lib/token.js';
 
 const REFRESH_MS = 30_000;
 
@@ -20,7 +21,7 @@ export default function useEvents(screenId, range) {
 
     async function load() {
       try {
-        const res = await fetch(`/api/screens/${encodeURIComponent(screenId)}/events?${range}`);
+        const res = await fetch(withToken(`/api/screens/${encodeURIComponent(screenId)}/events?${range}`));
         if (!res.ok) throw new Error(`http ${res.status}`);
         const data = await res.json();
         if (cancelled) return;

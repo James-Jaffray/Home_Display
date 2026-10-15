@@ -1,14 +1,42 @@
+# Home-Display: one container serves both the wall displays (/display/<id>) and the
+# dashboard (/admin). See README.md, "Quick start" and "Choose how to run it".
+
 services:
   home-display:
-    # Replace OWNER with your GitHub user once the image is published.
-    image: ghcr.io/OWNER/home-display:latest
-    # Or build locally instead:
+    # If you fork this project, change james-jaffray to your own lowercase GitHub name.
+    image: ghcr.io/james-jaffray/home-display:latest
+    # Or build it yourself instead of pulling:
     # build: .
     restart: unless-stopped
     ports:
+      # Home network only (the default): open http://<this-machine>:8080 from any device
+      # at home. Do NOT port-forward this on your router.
       - "8080:8080"
+      # Using the tunnel below and want ONLY the tunnel to reach it? Use this line instead
+      # (then home devices use the tunnel address too):
+      # - "127.0.0.1:8080:8080"
     env_file: .env
     volumes:
       - ./config/config.yaml:/config/config.yaml:ro
-      # All mutable state (OAuth tokens, settings, uploaded photos). Back this up.
-      - ./data:/data
+      # All mutable state: Google tokens, dashboard settings, photos, icons. Back this up.
+      # A named volume has the right permissions for the container's unprivileged user.
+      # To see the files directly use a folder instead (and run: chown 1000:1000 ./data):
+      #   - ./data:/data
+      - home-display-data:/data
+
+  # Optional: reach the displays from outside your home network through a Cloudflare Tunnel.
+  # Needs a domain on Cloudflare and a tunnel token (see README). Start it with:
+  #   docker compose --profile tunnel up -d
+  # In Cloudflare, point the tunnel's public hostname at  http://home-display:8080
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - home-display
+
+volumes:
+  home-display-data:

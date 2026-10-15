@@ -4,6 +4,7 @@ import { createCalendarService } from './calendarService.js';
 import { createSettingsStore } from './settingsStore.js';
 import { createLiveConfig } from './liveConfig.js';
 import { createAdminAuth } from './adminAuth.js';
+import { createDisplayAccess } from './displayAccess.js';
 
 /**
  * Build the long-lived services once and hand them to the app. Keeping this in one place
@@ -34,13 +35,26 @@ export function createServices({ config, settings, log, fetchImpl }) {
     secureCookie: settings.publicBaseUrl.startsWith('https://'),
   });
 
+  const displayAccess = createDisplayAccess({ getConfig: live.get });
+
+  /** Every Google account name: those used by config.yaml calendars plus dashboard-added ones. */
+  function accountNames() {
+    const names = new Set(settingsStore.get().accounts);
+    for (const cal of Object.values(live.get().calendars)) {
+      names.add(cal.account);
+    }
+    return [...names];
+  }
+
   return {
     tokens,
     settingsStore,
+    accountNames,
     live,
     oauth,
     calendars,
     adminAuth,
+    displayAccess,
     /** Load saved dashboard settings from disk; call once at startup. */
     async init() {
       await settingsStore.init();

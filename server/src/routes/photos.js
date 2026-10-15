@@ -1,4 +1,5 @@
 import { openPhoto, photoFolder } from '../services/photos.js';
+import { displayGuard } from './displayGuard.js';
 
 /**
  * GET /photos/:screen/:file streams one image. All the safety checks (name rules,
@@ -7,7 +8,7 @@ import { openPhoto, photoFolder } from '../services/photos.js';
  * @param {{services: ReturnType<import('../services/index.js').createServices>, photosDir: string}} options
  */
 export default async function photoRoutes(app, { services, photosDir }) {
-  app.get('/photos/:screen/:file', async (req, reply) => {
+  app.get('/photos/:screen/:file', { preHandler: displayGuard(services, 'screen') }, async (req, reply) => {
     const screen = services.live.get().screens[req.params.screen];
     if (!screen) return reply.code(404).send({ error: 'not found' });
 

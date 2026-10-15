@@ -21,12 +21,12 @@ export default function Clock({ timezone, clock, compact = false }) {
   return (
     <div className="[text-shadow:0_2px_24px_rgb(0_0_0/0.6)]">
       <div
-        className={`${compact ? 'text-[length:calc(var(--fs,1)*min(18vw,10vh))]' : 'text-[length:calc(var(--fs,1)*min(26vw,20vh))]'} leading-none font-semibold whitespace-nowrap tabular-nums`}
+        className={`${compact ? 'text-[length:calc(var(--fs,1)*min(18cqw,10cqh))]' : 'text-[length:calc(var(--fs,1)*min(26cqw,20cqh))]'} leading-none font-semibold whitespace-nowrap tabular-nums`}
       >
         {time}
         {period && <span className="ml-[0.15em] text-[0.35em] font-medium text-text-muted">{period}</span>}
       </div>
-      <div className={`mt-[1vh] ${compact ? 'text-[length:calc(var(--fs,1)*min(4.4vw,3vh))]' : 'text-[length:calc(var(--fs,1)*min(6vw,5vh))]'} text-text-muted`}>{formatDate.format(now)}</div>
+      <div className={`mt-[1cqh] ${compact ? 'text-[length:calc(var(--fs,1)*min(4.4cqw,3cqh))]' : 'text-[length:calc(var(--fs,1)*min(6cqw,5cqh))]'} text-text-muted`}>{formatDate.format(now)}</div>
     </div>
   );
 }

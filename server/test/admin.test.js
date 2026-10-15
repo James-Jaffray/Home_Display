@@ -1,6 +1,6 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { validateConfig } from '../src/config.js';
@@ -32,10 +32,10 @@ const settingsFor = (password = 'pw') => ({
   adminPassword: password,
 });
 
-async function start(password) {
+async function start(password, fetchImpl) {
   const config = baseConfig();
   const settings = settingsFor(password);
-  const services = createServices({ config, settings });
+  const services = createServices({ config, settings, fetchImpl });
   await services.init();
   const app = await buildApp({ settings, services });
   return { app, services, settings, config };
@@ -136,6 +136,34 @@ test('invalid changes are rejected and nothing is saved', async () => {
   await app.close();
 });
 
+test('rotation: only 0/90/180/270, applied to the display', async () => {
+  const { app } = await start();
+  const cookie = await login(app);
+  const send = (payload) => app.inject({ method: 'PATCH', url: '/api/admin/screens/kitchen', headers: { cookie }, payload });
+
+  assert.equal((await app.inject('/api/screens/kitchen')).json().rotate, 0);
+  assert.equal((await send({ rotate: 45 })).statusCode, 400);
+  assert.equal((await send({ rotate: '90' })).statusCode, 400);
+  assert.equal((await send({ rotate: 90 })).statusCode, 200);
+  assert.equal((await app.inject('/api/screens/kitchen')).json().rotate, 90);
+  await app.close();
+});
+
+test('same-site writes are accepted when a proxy rewrites Host', async () => {
+  const { app } = await start();
+  const cookie = await login(app);
+  const send = (headers) =>
+    app.inject({ method: 'PATCH', url: '/api/admin/screens/kitchen', headers: { cookie, ...headers }, payload: { fontScale: 1.1 } });
+
+  // Dev server / reverse proxy: Host is the backend, the browser's host arrives forwarded.
+  const proxied = await send({ origin: 'http://localhost:5173', host: 'localhost:8080', 'x-forwarded-host': 'localhost:5173' });
+  assert.equal(proxied.statusCode, 200);
+  // The configured public URL is always trusted.
+  const publicSite = await send({ origin: 'http://localhost:8080', host: 'backend:3000' });
+  assert.equal(publicSite.statusCode, 200);
+  await app.close();
+});
+
 test('cross-site writes are refused', async () => {
   const { app } = await start();
   const cookie = await login(app);
@@ -178,7 +206,7 @@ test('photos: upload by content, list, serve, delete; non-images refused', async
   await app.close();
 });
 
-test('calendars added in the dashboard show up and can be removed; config.yaml ones cannot', async () => {
+test('calendars added in the dashboard show up on the screen and can be switched off', async () => {
   const { app } = await start();
   const cookie = await login(app);
 
@@ -199,12 +227,23 @@ test('calendars added in the dashboard show up and can be removed; config.yaml o
   const ids = async () => (await app.inject('/api/screens/kitchen/events')).json().calendars.map((c) => c.id);
   assert.deepEqual(await ids(), ['mine', id]);
 
-  const noRemove = await app.inject({ method: 'DELETE', url: '/api/admin/calendars/mine', headers: { cookie } });
-  assert.equal(noRemove.statusCode, 400);
-
-  const rm = await app.inject({ method: 'DELETE', url: `/api/admin/calendars/${id}`, headers: { cookie } });
-  assert.equal(rm.statusCode, 200);
+  // Switching it off hides it from the screen (the definition is kept, so on again is instant).
+  const off = await app.inject({
+    method: 'PATCH',
+    url: '/api/admin/screens/kitchen',
+    headers: { cookie },
+    payload: { calendars: ['mine'] },
+  });
+  assert.equal(off.statusCode, 200);
   assert.deepEqual(await ids(), ['mine']);
-  assert.equal(JSON.parse(readFileSync(join(dir, 'data', 'settings.json'), 'utf8')).calendars[id], undefined);
+
+  const on = await app.inject({
+    method: 'PATCH',
+    url: '/api/admin/screens/kitchen',
+    headers: { cookie },
+    payload: { calendars: ['mine', id] },
+  });
+  assert.equal(on.statusCode, 200);
+  assert.deepEqual(await ids(), ['mine', id]);
   await app.close();
 });

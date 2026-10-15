@@ -6,7 +6,6 @@ const STATUS_TEXT = {
   stale: 'may be out of date',
   error: 'unavailable',
   pending: 'loading',
-  unsupported: 'not supported yet',
 };
 
 /**
@@ -18,7 +17,7 @@ export default function StatusFooter({ agenda, offline, formatTime }) {
   const updated = agenda.calendars.map((c) => c.updatedAt).filter(Boolean).sort().at(-1);
 
   return (
-    <footer className="text-[length:calc(var(--fs,1)*min(3.2vw,2.2vh))] text-text-muted">
+    <footer className="text-[length:calc(var(--fs,1)*min(3.2cqw,2.2cqh))] text-text-muted">
       {offline && <span className="mr-3 text-warn">Can’t reach the server</span>}
       {problems.map((c) => (
         <span key={c.id} className="mr-3 text-warn">

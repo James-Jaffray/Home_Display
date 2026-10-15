@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { UiIcon } from '../lib/icons.jsx';
 import { api } from './api.js';
 
 /** @param {{onLoggedIn: () => void, unreachable?: boolean}} props */
@@ -21,10 +22,16 @@ export default function Login({ onLoggedIn, unreachable }) {
   }
 
   return (
-    <form onSubmit={submit} className="panel mx-auto mt-[12vh] max-w-sm">
-      <h1 className="text-2xl font-semibold">Home-Display</h1>
-      <p className="mt-1 text-text-muted">Dashboard login</p>
-      <label className="mt-5 block">
+    <form onSubmit={submit} className="panel">
+      <div className="flex flex-col items-center text-center">
+        <span className="brand-mark">
+          <UiIcon name="brand" className="size-5" />
+        </span>
+        <h1 className="mt-4 text-xl font-semibold tracking-tight">Home-Display</h1>
+        <p className="card-lede">Sign in to the dashboard</p>
+      </div>
+
+      <label className="mt-6 block">
         <span className="label">Password</span>
         <input
           className="field"
@@ -35,7 +42,7 @@ export default function Login({ onLoggedIn, unreachable }) {
           onChange={(e) => setPassword(e.target.value)}
         />
       </label>
-      {error && <p className="mt-3 text-danger">{error}</p>}
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
       <button className="btn btn-primary mt-5 w-full" disabled={busy || !password}>
         {busy ? 'Signing in…' : 'Sign in'}
       </button>

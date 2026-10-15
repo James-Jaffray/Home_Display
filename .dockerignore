@@ -9,3 +9,5 @@ data
 photos
 *.md
 !README.md
+docs
+.claude

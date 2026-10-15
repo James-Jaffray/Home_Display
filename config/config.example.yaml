@@ -1,37 +1,27 @@
-# Copy to config/config.yaml (gitignored). Unknown keys are errors.
-# "${NAME}" is replaced with the environment variable NAME (see .env.example),
-# so secrets stay out of this file.
+# Copy to config/config.yaml (it is gitignored). Unknown keys are errors.
+#
+# This file only needs to describe your starting point: one display and one calendar.
+# Everything else (more displays, which calendars show, photos, links, text size...) is
+# done in the dashboard at /admin and saved to data/settings.json.
 
+# The display opened at /display (and at /).
 defaultScreen: kitchen
 
 calendars:
-  # Google account via OAuth (slice 2). "account" is a name you choose; you
-  # connect it once through Google's consent screen. No passwords are stored.
+  # A Google calendar. "account" is a short name you choose; you connect that name to a
+  # real Google account once, in the dashboard (Accounts tab). No passwords are stored.
   james-personal:
-    provider: google
     account: james
-    calendarId: primary
+    calendarId: primary       # "primary" is the account's own calendar
     label: James
     color: "#4f9dff"
 
-  # Secret iCal address (works with no Google Cloud setup; Google refreshes
-  # these feeds slowly, so edits can take minutes to hours to show up).
-  # family-ical:
-  #   provider: ical
-  #   url: ${KITCHEN_ICAL_URL}
-  #   label: Family
-  #   color: "#f2a65a"
-
+# Each screen is a "display" served at /display/<id>. The names admin, display, api,
+# photos, icons and assets are reserved.
 screens:
   kitchen:
     title: Kitchen
-    layout: month-grid        # month-grid | portrait-agenda (portrait-week, landscape-split coming)
-    weeks: 4                  # month-grid: weeks shown, starting with the current week
-    weekStart: sunday         # sunday | monday
-    timezone: America/Edmonton
-    clock: "12"               # "12" or "24"
+    timezone: America/Edmonton   # an IANA name, e.g. America/Toronto, Europe/London
     calendars: [james-personal]
-    photos:
-      folder: kitchen         # under PHOTOS_DIR (default /data/photos)
-      interval: 60            # seconds between photos
-    # token: ${KITCHEN_SCREEN_TOKEN}   # optional light safeguard, not real auth
+    layout: month-grid           # month-grid | portrait-week | landscape-split | portrait-agenda
+    mode: kiosk                  # kiosk (wall screen) | interactive (browser homepage)

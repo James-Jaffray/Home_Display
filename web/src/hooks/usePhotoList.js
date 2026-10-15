@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { withToken } from '../lib/token.js';
 
 const REFRESH_MS = 10 * 60_000;
 
@@ -17,12 +18,14 @@ export default function usePhotoList(screenId) {
 
     async function load() {
       try {
-        const res = await fetch(`/api/screens/${encodeURIComponent(screenId)}/photos`);
+        const res = await fetch(withToken(`/api/screens/${encodeURIComponent(screenId)}/photos`));
         if (!res.ok) return;
         const body = await res.json();
         if (cancelled) return;
+        // Photo addresses carry the display token too (the browser loads them as images).
+        const urls = body.photos.map(withToken);
         // Same list again: keep the old array so the slideshow doesn't restart.
-        setPhotos((prev) => (prev.join('|') === body.photos.join('|') ? prev : body.photos));
+        setPhotos((prev) => (prev.join('|') === urls.join('|') ? prev : urls));
       } catch {
         // keep the current list
       }
