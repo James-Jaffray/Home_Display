@@ -12,7 +12,8 @@ const good = () => ({
 
 test('valid config passes and applies defaults', () => {
   const cfg = validateConfig(good(), { FEED: 'https://example.com/a.ics' });
-  assert.equal(cfg.screens.kitchen.layout, 'portrait-agenda');
+  assert.equal(cfg.screens.kitchen.layout, 'month-grid');
+  assert.equal(cfg.screens.kitchen.weeks, 4);
   assert.equal(cfg.screens.kitchen.photos.interval, 60);
   assert.equal(cfg.calendars.me.url, 'https://example.com/a.ics');
 });

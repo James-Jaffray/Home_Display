@@ -25,7 +25,9 @@ calendars:
 screens:
   kitchen:
     title: Kitchen
-    layout: portrait-agenda   # portrait-agenda | portrait-week | landscape-split
+    layout: month-grid        # month-grid | portrait-agenda (portrait-week, landscape-split coming)
+    weeks: 4                  # month-grid: weeks shown, starting with the current week
+    weekStart: sunday         # sunday | monday
     timezone: America/Edmonton
     clock: "12"               # "12" or "24"
     calendars: [james-personal]

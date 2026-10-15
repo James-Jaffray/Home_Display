@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import useScreen from './hooks/useScreen.js';
+import Agenda from './components/Agenda.jsx';
 import Clock from './components/Clock.jsx';
+import MonthGrid from './components/MonthGrid.jsx';
 import Slideshow from './components/Slideshow.jsx';
 
 // The first path segment is the screen id (the server redirects "/" to the default).
@@ -25,11 +27,29 @@ export default function App() {
     );
   }
 
+  // portrait-week and landscape-split are not built yet; they show the list view.
+  const isGrid = screen.layout === 'month-grid';
+
   return (
     <main className="relative h-full overflow-hidden bg-surface">
       <Slideshow screenId={screen.id} interval={screen.photoInterval} />
-      <div className="relative z-10 flex h-full flex-col items-center px-[6vw] pt-[8vh] text-center">
-        <Clock timezone={screen.timezone} clock={screen.clock} />
+      {/* --fs is the font scale chosen in the dashboard; every text size multiplies by it. */}
+      <div
+        className="relative z-10 flex h-full flex-col items-center gap-[2.5vh] px-[3vw] py-[3vh] text-center"
+        style={{ '--fs': screen.fontScale }}
+      >
+        <Clock timezone={screen.timezone} clock={screen.clock} compact={isGrid} />
+        {isGrid ? (
+          <MonthGrid
+            screenId={screen.id}
+            timezone={screen.timezone}
+            clock={screen.clock}
+            weeks={screen.weeks}
+            weekStart={screen.weekStart}
+          />
+        ) : (
+          <Agenda screenId={screen.id} timezone={screen.timezone} clock={screen.clock} />
+        )}
       </div>
     </main>
   );

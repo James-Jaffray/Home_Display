@@ -13,14 +13,14 @@ function isReadable(dir) {
 /**
  * GET /api/health: used by Docker's HEALTHCHECK and the browser watchdog (later).
  * @param {import('fastify').FastifyInstance} app
- * @param {{config: import('../config.js').Config, photosDir: string, version: string}} options
+ * @param {{services: ReturnType<import('../services/index.js').createServices>, photosDir: string, version: string}} options
  */
-export default async function healthRoutes(app, { config, photosDir, version }) {
+export default async function healthRoutes(app, { services, photosDir, version }) {
   app.get('/api/health', async () => ({
     status: 'ok',
     version,
     uptime: Math.round(process.uptime()),
-    screens: Object.keys(config.screens).length,
+    screens: Object.keys(services.live.get().screens).length,
     photosReadable: isReadable(photosDir),
   }));
 }

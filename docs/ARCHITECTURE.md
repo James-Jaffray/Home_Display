@@ -25,10 +25,16 @@ Read in this order:
 | `config.js` | Reads `config.yaml`, checks it strictly with zod, explains mistakes clearly. |
 | `app.js` | Creates the Fastify server and plugs in the route files. |
 | `routes/` | One file per topic. A route only turns a request into a response. |
-| `services/` | The real logic (e.g. listing photos safely). Routes call services. |
+| `services/` | The real logic. Routes call services. `photos.js` lists files safely; `calendarService.js` polls Google and caches events; `agenda.js` groups events by day in the screen timezone; `google/` talks to Google; `tokenStore.js` keeps refresh tokens in `/data`. |
+| `routes/admin.js`, `routes/auth.js` | The dashboard API (login, settings, calendars, photos) and the Google connect flow. All need the admin session. |
+| `services/settingsStore.js`, `liveConfig.js` | `settings.json` holds dashboard choices; `liveConfig` merges them over `config.yaml`. Everything reads `services.live.get()` per request, so changes apply instantly. |
+| `services/adminAuth.js` | Password check, session cookie, lockout. |
+| `services/index.js` | Builds the services once so `index.js` and the tests wire them the same way. |
 
 Rule of thumb: **routes are thin, services do the work, nothing in `routes/` touches the
 disk directly.** That keeps logic testable without starting a server.
+
+Request flow for the agenda: a timer in `calendarService` asks Google for each calendar every 60 s and keeps the last good result. `GET /api/screens/:id/events` reads that cache and runs it through `agenda.js`; the browser never calls Google.
 
 Request flow for a photo: `GET /photos/kitchen/a.jpg` → `routes/photos.js` finds the screen in
 the config → `services/photos.js` checks the file name is safe and opens it → streamed back.
@@ -38,9 +44,11 @@ the config → `services/photos.js` checks the file name is safe and opens it �
 | Folder / file | Job |
 |---|---|
 | `main.jsx` | Starts React. |
-| `App.jsx` | Picks the screen from the URL and shows it (or an error message). |
-| `components/` | Things you can see: `Clock`, `Slideshow`. Mostly layout and styling. |
-| `hooks/` | Things that fetch or tick: `useScreen`, `usePhotoList`, `useNow`. |
+| `App.jsx` | The wall display: picks the screen from the URL and shows it (or an error message). |
+| `admin/` | The dashboard page (`/admin`), loaded on demand: login, screen settings, calendars, photos. |
+| `components/` | Things you can see: `Clock`, `Slideshow`, `Agenda`. Mostly layout and styling. |
+| `hooks/` | Things that fetch or tick: `useScreen`, `usePhotoList`, `useEvents`, `useNow`. |
+| `lib/` | Small pure helpers (time formatting). |
 | `index.css` | Tailwind plus the colour tokens. Components use tokens, never raw hex. |
 
 ## Conventions

@@ -16,6 +16,12 @@ npm run dev:web      # http://localhost:5173 (proxies /api)
 npm run lint && npm test
 ```
 
+## Dashboard
+
+Set `ADMIN_PASSWORD` in `.env`, then open `/admin`. From there you can connect Google accounts,
+choose which calendars each screen shows, change the layout and text size, and upload photos.
+The wall display itself lives at `/<screen>` (for example `/kitchen`).
+
 ## Photos
 
 Put images (`.jpg`, `.png`, `.webp`, `.avif`) in `<PHOTOS_DIR>/<screen folder>`; in Docker that is

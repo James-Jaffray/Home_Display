@@ -117,7 +117,7 @@ hours, so they cannot be the main path.
 - Calendar layer is an interface (`getEvents(range)`). **Google OAuth provider is built
   first (slice 2).** iCal provider stays as a small secondary provider (works with no Google
   Cloud setup, useful for non-Google feeds).
-- "Near real time" = polling `events.list` with `syncToken` every 60 s (cheap, incremental).
+- "Near real time" = polling `events.list` every 60 s. (Built without `syncToken`: Google does not allow a sync token together with the `timeMin`/`timeMax` window we need, and a few calendars every minute is well inside quota.)
   Google push channels need a public HTTPS webhook and renewal; not worth it for a home
   install. Revisit only if 60 s feels slow.
 - **Testing-mode trap:** an OAuth app in "Testing" has refresh tokens that **expire after 7
@@ -266,12 +266,12 @@ is refused.
 - Provider interface (`getEvents(range)`), per-calendar cache, last-good retained on failure.
 - **Google provider:** OAuth authorization-code flow (server-side, `access_type=offline`,
   `calendar.readonly`), refresh tokens in `/data/tokens.json` (file mode 600, atomic writes),
-  `events.list` polling with `syncToken` about every 60 s, `singleEvents=true` so Google
+  `events.list` polling about every 60 s (no `syncToken`, see 4.1), `singleEvents=true` so Google
   expands recurrence for us. Handle `invalid_grant` (revoked/expired token) by marking the
   account "needs reconnect" on the screen and in logs, never crashing.
-- Until the admin UI exists (slice 4), connection is a CLI/route: open
+- **Built:** until the admin UI exists (slice 4) the connect routes are off unless `GOOGLE_CONNECT_ENABLED=true`, because there is no login yet. Open
   `/api/auth/google/start?account=<name>`, approve, done. Accounts are named in config.
-- **iCal provider** as a secondary provider with a parser (propose `node-ical` or `ical.js`
+- **iCal provider (deferred, needs James's OK on the dependency):** a secondary provider with a parser (propose `node-ical` or `ical.js`
   + `rrule` and why). Recurrence (RRULE, EXDATE, RECURRENCE-ID, all-day, DST) is the hard
   part here, so cover with tests using saved fixtures. The Google path avoids this.
 - Multiple calendars per screen, merged, sorted, colour and label per calendar.
@@ -301,8 +301,10 @@ crash; no token, calendar URL or event title in default logs or in any response 
 events never appear on the other; a wrong or missing token returns 401 when a token is set;
 the parents' Pi can load its screen through the tunnel and an anonymous request cannot.
 
-### Slice 4: Admin UI **[rev2, new]**
+### Slice 4: Admin UI **[rev2, new] (BUILT, see notes below)**
 **Goal:** James can manage everything from a browser instead of editing YAML.
+
+**Built as asked (admin password chosen):** `/admin` is a separate page from the display. Single shared `ADMIN_PASSWORD` from `.env`, HttpOnly SameSite=Strict session cookie, lockout after 5 wrong tries, same-origin check on writes. It edits per screen: layout, weeks, week start, 12/24h, text size (0.7x to 1.6x), photo interval, which calendars show, and photos (resized to 1920px in the browser before upload, so no `sharp` dependency). It can add calendars from a connected Google account (shared ones too) and connect or reconnect accounts. Changes are saved to `/data/settings.json` and applied live. Still to do in this slice: edit timezone/title/photo folder, create/delete screens, drag-to-reorder, and a preview pane.
 - **Admin auth first.** Decision needed (Q9). Recommended: rely on Cloudflare Access for the
   `/admin` path **and** a single admin password from `.env` (hashed compare, rate limited)
   for installs without a tunnel. No user accounts.

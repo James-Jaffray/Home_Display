@@ -12,8 +12,8 @@ export class ConfigError extends Error {
   }
 }
 
-const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a #rrggbb colour');
-const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'use lowercase letters, digits and dashes');
+export const color = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a #rrggbb colour');
+export const id = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'use lowercase letters, digits and dashes');
 
 const timezone = z.string().refine((tz) => {
   try {
@@ -24,7 +24,7 @@ const timezone = z.string().refine((tz) => {
   }
 }, 'not a valid IANA timezone');
 
-const googleCalendar = z.strictObject({
+export const googleCalendar = z.strictObject({
   provider: z.literal('google'),
   account: id,
   calendarId: z.string().min(1).default('primary'),
@@ -39,9 +39,18 @@ const icalCalendar = z.strictObject({
   color,
 });
 
+export const LAYOUTS = ['month-grid', 'portrait-agenda', 'portrait-week', 'landscape-split'];
+
 const screen = z.strictObject({
   title: z.string().min(1),
-  layout: z.enum(['portrait-agenda', 'portrait-week', 'landscape-split']).default('portrait-agenda'),
+  layout: z
+    .enum(LAYOUTS)
+    .default('month-grid'),
+  // month-grid: how many weeks to show, starting with the current week.
+  weeks: z.number().int().min(1).max(6).default(4),
+  weekStart: z.enum(['sunday', 'monday']).default('sunday'),
+  // Multiplies all text on the display (1 = normal).
+  fontScale: z.number().min(0.7).max(1.6).default(1),
   timezone,
   clock: z.enum(['12', '24']).default('12'),
   calendars: z.array(id).default([]),

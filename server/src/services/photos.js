@@ -1,5 +1,6 @@
 import { createReadStream } from 'node:fs';
-import { readdir, stat } from 'node:fs/promises';
+import { mkdir, readdir, stat, unlink, writeFile } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
 import { join, extname } from 'node:path';
 
 // Served as-is. Phones produce 4000+ px originals that a Pi's Chromium struggles to
@@ -76,5 +77,52 @@ export async function openPhoto(photosDir, folder, name) {
     };
   } catch {
     return null;
+  }
+}
+
+/** Image types we accept for upload, recognised by their first bytes, not by what the client says. */
+function sniffImageExtension(buf) {
+  if (buf.length > 12 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return '.jpg';
+  if (buf.length > 12 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return '.png';
+  }
+  if (buf.length > 12 && buf.toString('latin1', 0, 4) === 'RIFF' && buf.toString('latin1', 8, 12) === 'WEBP') {
+    return '.webp';
+  }
+  return null;
+}
+
+/**
+ * Save an uploaded image into a screen's folder under a name WE choose (never the
+ * client's file name). Returns the new file name, or null if it is not a supported image.
+ *
+ * @param {string} photosDir
+ * @param {string} folder
+ * @param {Buffer} data
+ * @returns {Promise<string|null>}
+ */
+export async function savePhoto(photosDir, folder, data) {
+  const ext = sniffImageExtension(data);
+  if (!ext) return null;
+  const name = `${Date.now().toString(36)}-${randomBytes(3).toString('hex')}${ext}`;
+  const dir = join(photosDir, folder);
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, name), data);
+  return name;
+}
+
+/**
+ * Delete one photo. Returns false if the name is unsafe or the file does not exist.
+ * @param {string} photosDir
+ * @param {string} folder
+ * @param {string} name
+ */
+export async function deletePhoto(photosDir, folder, name) {
+  if (!isSafePhotoName(name)) return false;
+  try {
+    await unlink(join(photosDir, folder, name));
+    return true;
+  } catch {
+    return false;
   }
 }

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildApp } from '../src/app.js';
 import { validateConfig } from '../src/config.js';
+import { createServices } from '../src/services/index.js';
 import { isSafePhotoName } from '../src/services/photos.js';
 
 let root;
@@ -28,7 +29,15 @@ before(async () => {
       ghost: { title: 'No folder', timezone: 'UTC' },
     },
   });
-  app = await buildApp({ config, photosDir: photos });
+  const settings = {
+    version: '0.0.0',
+    photosDir: photos,
+    dataDir: join(root, 'data'),
+    publicBaseUrl: 'http://localhost:8080',
+    google: { clientId: '', clientSecret: '' },
+    adminPassword: '',
+  };
+  app = await buildApp({ settings, services: createServices({ config, settings }) });
 });
 
 after(async () => {
@@ -80,7 +89,7 @@ test('unknown screen is a 404', async () => {
 
 test('screen endpoint exposes only display fields', async () => {
   const body = (await app.inject('/api/screens/kitchen')).json();
-  assert.deepEqual(Object.keys(body).sort(), ['clock', 'id', 'layout', 'photoInterval', 'timezone', 'title']);
+  assert.deepEqual(Object.keys(body).sort(), ['clock', 'fontScale', 'id', 'layout', 'photoInterval', 'timezone', 'title', 'weekStart', 'weeks']);
 });
 
 test('root redirects to the default screen', async () => {
