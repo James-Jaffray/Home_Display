@@ -1,0 +1,35 @@
+# Copy to config/config.yaml (gitignored). Unknown keys are errors.
+# "${NAME}" is replaced with the environment variable NAME (see .env.example),
+# so secrets stay out of this file.
+
+defaultScreen: kitchen
+
+calendars:
+  # Google account via OAuth (slice 2). "account" is a name you choose; you
+  # connect it once through Google's consent screen. No passwords are stored.
+  james-personal:
+    provider: google
+    account: james
+    calendarId: primary
+    label: James
+    color: "#4f9dff"
+
+  # Secret iCal address (works with no Google Cloud setup; Google refreshes
+  # these feeds slowly, so edits can take minutes to hours to show up).
+  # family-ical:
+  #   provider: ical
+  #   url: ${KITCHEN_ICAL_URL}
+  #   label: Family
+  #   color: "#f2a65a"
+
+screens:
+  kitchen:
+    title: Kitchen
+    layout: portrait-agenda   # portrait-agenda | portrait-week | landscape-split
+    timezone: America/Edmonton
+    clock: "12"               # "12" or "24"
+    calendars: [james-personal]
+    photos:
+      folder: kitchen         # under PHOTOS_DIR (default /data/photos)
+      interval: 60            # seconds between photos
+    # token: ${KITCHEN_SCREEN_TOKEN}   # optional light safeguard, not real auth

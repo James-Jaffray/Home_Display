@@ -1,0 +1,14 @@
+services:
+  kitchen-display:
+    # Replace OWNER with your GitHub user once the image is published.
+    image: ghcr.io/OWNER/kitchen-display:latest
+    # Or build locally instead:
+    # build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file: .env
+    volumes:
+      - ./config/config.yaml:/config/config.yaml:ro
+      # All mutable state (OAuth tokens, settings, uploaded photos). Back this up.
+      - ./data:/data

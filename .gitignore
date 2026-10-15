@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+config/config.yaml
+config.yaml
+data/
+photos/
+*.log
+.DS_Store
