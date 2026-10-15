@@ -177,6 +177,13 @@ stays on for months needs no attention. Your settings, tokens and photos live in
 `home-display-data` volume and survive updates. **Back that volume up**: it holds everything
 that cannot be recreated (your Google sign-ins, dashboard settings and photos).
 
+## Running on a Synology NAS
+
+Container Manager can build and run it directly from the repository. The steps, click by click,
+are in [docs/synology.md](docs/synology.md). The same `docker-compose.build.yml` works on any
+machine with Docker when no published image exists yet:
+`docker compose -f docker-compose.build.yml up -d --build`.
+
 ## Running on a Raspberry Pi
 
 The image is built for `linux/amd64` and `linux/arm64`, so it runs on a Raspberry Pi 4 or 5
