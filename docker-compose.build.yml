@@ -22,5 +22,19 @@ services:
       # All mutable state: Google tokens, dashboard settings, photos, icons. Back this up.
       - home-display-data:/data
 
+  # Optional: reach the displays from outside through a Cloudflare Tunnel (see README).
+  # Needs CLOUDFLARE_TUNNEL_TOKEN in .env. Start it with:
+  #   docker compose -f docker-compose.build.yml --profile tunnel up -d
+  # In Cloudflare, point the tunnel's public hostname at  http://home-display:8080
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - home-display
+
 volumes:
   home-display-data:
