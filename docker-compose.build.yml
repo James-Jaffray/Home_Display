@@ -14,8 +14,8 @@ services:
     restart: unless-stopped
     ports:
       # Home network only. Do NOT port-forward this on your router.
-      # If 8080 is already used on this machine, change the left number (for example 8081).
-      - "8080:8080"
+      # If 8080 is already used on this machine, set HOST_PORT=8081 in .env (any free port).
+      - "${HOST_PORT:-8080}:8080"
     env_file: .env
     volumes:
       - ./config/config.yaml:/config/config.yaml:ro

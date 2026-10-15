@@ -11,10 +11,11 @@ services:
     ports:
       # Home network only (the default): open http://<this-machine>:8080 from any device
       # at home. Do NOT port-forward this on your router.
-      - "8080:8080"
+      # Port 8080 already used here (common on a NAS)? Set HOST_PORT=8081 in .env.
+      - "${HOST_PORT:-8080}:8080"
       # Using the tunnel below and want ONLY the tunnel to reach it? Use this line instead
       # (then home devices use the tunnel address too):
-      # - "127.0.0.1:8080:8080"
+      # - "127.0.0.1:${HOST_PORT:-8080}:8080"
     env_file: .env
     volumes:
       - ./config/config.yaml:/config/config.yaml:ro

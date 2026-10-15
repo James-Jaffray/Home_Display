@@ -81,8 +81,10 @@ rename in File Station.
 - Dashboard: `http://<nas-ip>:8080/admin` (log in with `ADMIN_PASSWORD`).
 - Display: `http://<nas-ip>:8080/display/kitchen`.
 
-If port 8080 is taken on the NAS, change `"8080:8080"` in the project to `"8081:8080"` and use
-8081.
+If port 8080 is taken on the NAS (the build ends with "port is already allocated"), add
+`HOST_PORT=8081` on its own line in `.env`, run the same command again, and use 8081 in the
+addresses. The app keeps using 8080 inside the container, so the Google redirect URI does not
+change.
 
 ## 5. Connect Google
 
@@ -118,5 +120,5 @@ Container Manager → Container → `home-display-home-display-1` → **Log**.
 |---|---|
 | `Invalid configuration` | The message names the setting in `config/config.yaml`. |
 | `cannot read /config/config.yaml` | The file is missing, or the project **Path** is wrong. |
-| Nothing at port 8080 | Another app uses it; change the port as in step 4. |
+| "port is already allocated" | Another app uses 8080; set `HOST_PORT=8081` in `.env` as in step 4. |
 | Build fails while downloading | The NAS needs internet access to build. |
